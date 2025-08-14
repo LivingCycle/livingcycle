@@ -65,9 +65,9 @@ npm run build && npx wrangler deploy --env staging
 npm run build && npx wrangler deploy
 ```
 
-## Current Deployment
+## Deployment
 
-🌐 **Staging**: [https://livingcycle-staging.kashifshah.workers.dev](https://livingcycle-staging.kashifshah.workers.dev)
+Deploy to Cloudflare Workers using the included configuration. Update `wrangler.toml` with your own account details.
 
 ## Project Status
 
