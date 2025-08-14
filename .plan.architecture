@@ -1,0 +1,674 @@
+# LivingCycle Architecture Plan
+## Life Organization Assistant PWA
+
+Last Updated: 2025-08-14
+
+## Executive Summary
+Progressive Web Application (PWA) designed for life organization and daily structure with robust offline capabilities. LivingCycle follows the architectural patterns established by RoomCycle, adapting its systematic approach from space organization to daily life management. Architecture prioritizes reliability during critical moments, privacy-first data handling, and progressive enhancement for accessibility across all devices.
+
+## Core Architecture Principles
+
+### Inherited from RoomCycle
+1. **Domain-Driven Design**: Life organization logic isolated in domain layer
+2. **MVVM Pattern**: Clear separation between View, ViewModel, and Model
+3. **Repository Pattern**: Data access abstraction for offline/online sources
+4. **Service Layer**: Wellness operations orchestration
+5. **Single Responsibility**: Each module focused on specific life organization aspect
+
+### LivingCycle-Specific
+6. **Offline-First**: All critical features must function without connectivity
+7. **Privacy-by-Design**: Zero-knowledge architecture where possible, encrypted local storage
+8. **Progressive Enhancement**: Core features work on any device, enhanced features for capable browsers
+9. **Crisis-Ready**: Emergency resources always accessible, never purged from cache
+10. **Data Sovereignty**: User owns their data, optional sync, local-first storage
+
+## Technology Stack
+- **Frontend**: PWA with Service Workers
+- **Local Storage**: IndexedDB (primary), Cache API, LocalStorage (settings)
+- **Encryption**: Web Crypto API for client-side encryption
+- **State Management**: Event-driven architecture with local state persistence
+- **Sync Protocol**: CRDTs for conflict-free synchronization
+- **Backend**: Optional - stateless API for sync, no required dependency
+
+## Offline Mood Tracking Implementation
+
+### Data Model
+```javascript
+// Mood Entry Schema (IndexedDB)
+{
+  id: 'uuid-v4',
+  timestamp: Date.now(),
+  mood_score: 1-10,
+  emotions: ['anxious', 'sad', 'hopeful'], // multi-select
+  triggers: String, // free text
+  activities: ['exercise', 'social', 'work'], // tagged
+  medications_taken: Boolean,
+  sleep_hours: Number,
+  journal_entry: String, // encrypted
+  location_context: 'home|work|outside|other',
+  sync_status: 'local|pending|synced',
+  version: Number // for CRDT
+}
+```
+
+### Storage Architecture
+```javascript
+// IndexedDB Structure
+const DB_NAME = 'livingcycle_db';
+const STORES = {
+  mood_entries: { keyPath: 'id', indexes: ['timestamp', 'sync_status'] },
+  interventions: { keyPath: 'id', indexes: ['type', 'last_accessed'] },
+  crisis_resources: { keyPath: 'id', indexes: ['priority'] },
+  user_preferences: { keyPath: 'key' },
+  sync_queue: { keyPath: 'id', indexes: ['timestamp', 'type'] }
+};
+```
+
+### Offline Sync Queue Pattern
+```javascript
+// Service Worker Sync Strategy
+self.addEventListener('sync', event => {
+  if (event.tag === 'mood-sync') {
+    event.waitUntil(
+      syncMoodEntries()
+        .then(processSyncQueue)
+        .catch(requeueForRetry)
+    );
+  }
+});
+
+// Conflict Resolution via CRDT
+class MoodCRDT {
+  merge(local, remote) {
+    // Last-write-wins with vector clocks
+    if (local.version > remote.version) return local;
+    if (remote.version > local.version) return remote;
+    // Same version - merge by timestamp
+    return local.timestamp > remote.timestamp ? local : remote;
+  }
+}
+```
+
+### Pattern Recognition (Offline ML)
+```javascript
+// TensorFlow.js Lite Model for Pattern Detection
+class MoodPatternDetector {
+  async loadModel() {
+    // Load 2MB model from cache
+    this.model = await tf.loadLayersModel('/models/mood-patterns.json');
+  }
+  
+  async detectPatterns(entries) {
+    // Run inference locally
+    const tensor = tf.tensor2d(this.preprocessEntries(entries));
+    const predictions = this.model.predict(tensor);
+    return {
+      trend: predictions[0], // improving/stable/declining
+      risk_indicators: predictions[1],
+      suggested_interventions: predictions[2]
+    };
+  }
+}
+```
+
+## Crisis Intervention Features
+
+### Emergency Resource Caching
+```javascript
+// Service Worker - Crisis Resources Never Purged
+const CRISIS_CACHE = 'crisis-v1';
+const CRISIS_RESOURCES = [
+  '/crisis/hotlines.json',
+  '/crisis/breathing-exercises.html',
+  '/crisis/grounding-techniques.html',
+  '/crisis/safety-plan.html',
+  '/crisis/emergency-contacts.html'
+];
+
+// Install handler - pre-cache crisis resources
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CRISIS_CACHE)
+      .then(cache => cache.addAll(CRISIS_RESOURCES))
+  );
+});
+
+// Cache update without purging crisis resources
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CRISIS_CACHE && !isCurrentCache(cacheName)) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+```
+
+### Crisis Detection Algorithm
+```javascript
+class CrisisDetector {
+  constructor() {
+    this.thresholds = {
+      mood_score: 3, // Below 3 triggers alert
+      keywords: ['suicide', 'harm', 'end it', 'give up'],
+      pattern_decline: -2, // 2-point drop over 3 days
+    };
+  }
+  
+  async assessEntry(entry) {
+    const triggers = [];
+    
+    // Check mood score
+    if (entry.mood_score <= this.thresholds.mood_score) {
+      triggers.push('low_mood');
+    }
+    
+    // Keyword detection (privacy-preserving, local only)
+    const hasKeywords = this.detectKeywords(entry.journal_entry);
+    if (hasKeywords) triggers.push('keywords');
+    
+    // Pattern analysis
+    const recent = await this.getRecentEntries(7);
+    if (this.detectDecline(recent)) triggers.push('pattern');
+    
+    return {
+      risk_level: this.calculateRiskLevel(triggers),
+      interventions: this.selectInterventions(triggers),
+      show_resources: triggers.length > 0
+    };
+  }
+}
+```
+
+### Intervention Delivery System
+```javascript
+// Progressive intervention based on severity
+const INTERVENTION_MATRIX = {
+  low: [
+    { type: 'breathing', duration: 5, offline: true },
+    { type: 'journaling_prompt', offline: true },
+    { type: 'mood_boost_activity', offline: true }
+  ],
+  medium: [
+    { type: 'cbt_exercise', module: 'thought_challenging', offline: true },
+    { type: 'grounding_5_4_3_2_1', offline: true },
+    { type: 'contact_support_person', offline: true }
+  ],
+  high: [
+    { type: 'crisis_hotline', numbers: LOCAL_CRISIS_NUMBERS, offline: true },
+    { type: 'safety_plan', offline: true },
+    { type: 'emergency_contact', offline: true },
+    { type: 'nearest_er', uses_gps: true, offline: false }
+  ]
+};
+```
+
+## Service Worker Caching Strategies
+
+### Multi-Tier Cache Architecture
+```javascript
+// Cache strategies by resource type
+const CACHE_STRATEGIES = {
+  // Crisis resources - Cache only, never network
+  crisis: {
+    cacheName: 'crisis-v1',
+    strategy: 'cacheOnly',
+    persist: true // Never automatically purge
+  },
+  
+  // Intervention content - Cache first, update in background
+  interventions: {
+    cacheName: 'interventions-v1',
+    strategy: 'staleWhileRevalidate',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  },
+  
+  // User data - Network first with cache fallback
+  userData: {
+    cacheName: 'user-data-v1',
+    strategy: 'networkFirst',
+    timeout: 3000
+  },
+  
+  // Static assets - Cache first
+  static: {
+    cacheName: 'static-v1',
+    strategy: 'cacheFirst',
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+  }
+};
+
+// Intelligent fetch handler
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  const strategy = determineStrategy(url.pathname);
+  
+  event.respondWith(
+    executeStrategy(strategy, event.request)
+      .catch(() => offlineFallback(event.request))
+  );
+});
+```
+
+## Data Synchronization Architecture
+
+### Sync Protocol Design
+```javascript
+// Bi-directional sync with conflict resolution
+class SyncManager {
+  async performSync() {
+    // 1. Get local changes
+    const pending = await this.getPendingChanges();
+    
+    // 2. Send to server with vector clock
+    const serverResponse = await this.pushChanges(pending);
+    
+    // 3. Receive server changes
+    const serverChanges = serverResponse.changes;
+    
+    // 4. Merge using CRDT
+    const merged = await this.mergeChanges(serverChanges);
+    
+    // 5. Update local state
+    await this.updateLocalState(merged);
+    
+    // 6. Update sync status
+    await this.markSynced(pending.map(p => p.id));
+  }
+  
+  async mergeChanges(remote) {
+    const local = await this.getLocalEntries();
+    const crdt = new MoodCRDT();
+    
+    return remote.map(remoteEntry => {
+      const localEntry = local.find(l => l.id === remoteEntry.id);
+      if (!localEntry) return remoteEntry;
+      return crdt.merge(localEntry, remoteEntry);
+    });
+  }
+}
+```
+
+### Offline Queue Management
+```javascript
+// Queue operations when offline
+class OfflineQueue {
+  async enqueue(operation) {
+    const queue = await this.getQueue();
+    queue.push({
+      id: generateUUID(),
+      operation,
+      timestamp: Date.now(),
+      retries: 0
+    });
+    await this.saveQueue(queue);
+    
+    // Register for background sync
+    if ('sync' in self.registration) {
+      await self.registration.sync.register('data-sync');
+    }
+  }
+  
+  async processQueue() {
+    const queue = await this.getQueue();
+    const failed = [];
+    
+    for (const item of queue) {
+      try {
+        await this.executeOperation(item.operation);
+      } catch (error) {
+        item.retries++;
+        if (item.retries < MAX_RETRIES) {
+          failed.push(item);
+        }
+      }
+    }
+    
+    await this.saveQueue(failed);
+  }
+}
+```
+
+## Privacy & Security Architecture
+
+### Client-Side Encryption
+```javascript
+// Web Crypto API implementation
+class EncryptionService {
+  async generateKey() {
+    return crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt', 'decrypt']
+    );
+  }
+  
+  async encryptData(data, key) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encoded = new TextEncoder().encode(JSON.stringify(data));
+    
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      encoded
+    );
+    
+    return {
+      iv: Array.from(iv),
+      data: Array.from(new Uint8Array(encrypted))
+    };
+  }
+  
+  async decryptData(encrypted, key) {
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: new Uint8Array(encrypted.iv) },
+      key,
+      new Uint8Array(encrypted.data)
+    );
+    
+    return JSON.parse(new TextDecoder().decode(decrypted));
+  }
+}
+```
+
+### Zero-Knowledge Sync Protocol
+```javascript
+// Server never sees unencrypted data
+class ZeroKnowledgeSync {
+  async syncEntry(entry) {
+    // 1. Encrypt locally
+    const encrypted = await this.encrypt(entry);
+    
+    // 2. Generate proof of ownership without revealing content
+    const proof = await this.generateProof(entry.id);
+    
+    // 3. Send encrypted blob + proof
+    return fetch('/api/sync', {
+      method: 'POST',
+      body: JSON.stringify({
+        id: entry.id,
+        encrypted_data: encrypted,
+        proof: proof,
+        timestamp: entry.timestamp
+      })
+    });
+  }
+}
+```
+
+## Performance Optimizations
+
+### Progressive Loading
+```javascript
+// Load critical path first
+const CRITICAL_PATH = [
+  '/app-shell.html',
+  '/crisis/emergency.json',
+  '/css/critical.css',
+  '/js/crisis-handler.js'
+];
+
+// Lazy load enhancement features
+const ENHANCEMENT_MODULES = {
+  'mood-insights': () => import('./modules/insights.js'),
+  'peer-support': () => import('./modules/peer.js'),
+  'meditation': () => import('./modules/meditation.js')
+};
+```
+
+### Storage Quota Management
+```javascript
+class StorageManager {
+  async checkQuota() {
+    if (navigator.storage && navigator.storage.estimate) {
+      const {usage, quota} = await navigator.storage.estimate();
+      const percentUsed = (usage / quota) * 100;
+      
+      if (percentUsed > 80) {
+        await this.cleanupOldData();
+      }
+      
+      return {usage, quota, percentUsed};
+    }
+  }
+  
+  async cleanupOldData() {
+    // Never delete crisis resources or recent mood entries
+    const protected = ['crisis-v1', 'mood-recent'];
+    
+    // Delete oldest cached interventions
+    const caches = await caches.keys();
+    for (const cache of caches) {
+      if (!protected.includes(cache)) {
+        // Selective cleanup based on last accessed
+        await this.cleanupCache(cache);
+      }
+    }
+  }
+}
+```
+
+## Platform-Specific Implementations
+
+### iOS Workarounds
+```javascript
+// Handle iOS PWA limitations
+class IOSAdapter {
+  constructor() {
+    this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    this.isStandalone = window.navigator.standalone;
+  }
+  
+  // Local notifications fallback
+  async scheduleReminder(time, message) {
+    if (this.isIOS) {
+      // Use in-app notifications
+      return this.showInAppReminder(time, message);
+    } else {
+      // Use Notification API
+      return this.showSystemNotification(time, message);
+    }
+  }
+  
+  // Storage limit handling
+  async checkStorageLimit() {
+    if (this.isIOS) {
+      // iOS limits to ~50MB
+      return this.implementRotatingCache(50 * 1024 * 1024);
+    }
+  }
+}
+```
+
+### Android Enhanced Features
+```javascript
+// Leverage Android PWA capabilities
+class AndroidEnhancements {
+  async enableBackgroundSync() {
+    if ('periodicSync' in self.registration) {
+      await self.registration.periodicSync.register('mood-check', {
+        minInterval: 12 * 60 * 60 * 1000 // 12 hours
+      });
+    }
+  }
+  
+  async setupShortcuts() {
+    // Web app manifest shortcuts for quick actions
+    return {
+      shortcuts: [
+        {
+          name: 'Quick Mood Entry',
+          url: '/mood/quick',
+          icon: '/icons/mood.png'
+        },
+        {
+          name: 'Crisis Support',
+          url: '/crisis',
+          icon: '/icons/crisis.png'
+        }
+      ]
+    };
+  }
+}
+```
+
+## Testing Strategy
+
+### Offline Simulation Testing
+- Service Worker termination scenarios
+- Network failure during sync
+- Storage quota exceeded
+- Cache corruption recovery
+- Cross-browser compatibility
+
+### Crisis Feature Testing
+- Response time under 100ms for crisis resources
+- Offline access verification
+- Encryption/decryption performance
+- Pattern detection accuracy
+- Intervention delivery timing
+
+## Deployment Architecture
+
+### Progressive Rollout
+1. **Phase 1**: Core offline mood tracking
+2. **Phase 2**: Crisis intervention features
+3. **Phase 3**: Pattern recognition and insights
+4. **Phase 4**: Optional peer support features
+5. **Phase 5**: Healthcare provider integration
+
+### Monitoring & Analytics (Privacy-Preserving)
+- Local-only analytics by default
+- Opt-in anonymous usage metrics
+- Crisis feature usage tracking (aggregated)
+- Performance metrics (Core Web Vitals)
+- Error tracking without PII
+
+## Design System (OKSolar-Inspired)
+
+### Color Palette - Adapted for Mental Wellness
+```javascript
+// Based on RoomCycle's OKSolar, adapted for life organization context
+const LivingCycleColors = {
+  // Mood States (replacing RoomCycle's accent colors)
+  calm: '#2b90d8',      // Blue - peaceful, stable
+  hopeful: '#819500',   // Green - growth, progress
+  anxious: '#ac8300',   // Yellow - caution, awareness
+  low: '#dd459d',       // Magenta - needs attention
+  crisis: '#f23749',    // Red - immediate support needed
+  
+  // Light Theme (Calming)
+  light: {
+    background: '#fbf7ef',    // Soft warm white
+    foreground: '#657b83',    // Gentle text
+    emphasis: '#5b7279',      // Important elements
+    secondary: '#8faaab',     // Supporting text
+    highlight: '#f1e9d2',     // Interactive elements
+    cardBackground: '#ffffff', // Clean cards
+  },
+  
+  // Dark Theme (Soothing)
+  dark: {
+    background: '#002d38',    // Deep calming blue
+    foreground: '#98a8a8',    // Soft text
+    emphasis: '#8faaab',      // Important elements
+    secondary: '#5b7279',     // Supporting text
+    highlight: '#093946',     // Interactive elements
+    cardBackground: '#093946', // Elevated surfaces
+  },
+  
+  // High Contrast (Accessibility)
+  highContrast: {
+    background: '#000000',
+    foreground: '#ffffff',
+    emphasis: '#ffff00',
+    secondary: '#00ffff',
+    highlight: '#ff00ff',
+    cardBackground: '#1a1a1a',
+  }
+};
+```
+
+## Cycle Methodology Adaptation
+
+### From OODA (RoomCycle) to COPE (LivingCycle)
+RoomCycle's OODA loop (Observe, Orient, Decide, Act) transforms into LivingCycle's COPE cycle:
+
+```
+Check-in → Observe → Process → Engage
+    ↑                            ↓
+    ←────── Reflection Loop ←────
+```
+
+### COPE Components
+- **Check-in**: Daily mood and wellness assessment
+- **Observe**: Pattern recognition and trigger identification
+- **Process**: CBT exercises and coping strategies
+- **Engage**: Action steps and community support
+
+## Future Considerations
+
+### Potential Enhancements
+- WebAssembly for complex mood analysis
+- WebRTC for peer support (optional)
+- Web Bluetooth for wearable integration
+- WebXR for meditation experiences
+- Federated learning for pattern detection
+
+### Scalability Planning
+- CDN for static resources
+- Edge workers for API responses
+- Decentralized sync via WebTorrent
+- IPFS for intervention content distribution
+
+## Migration Path
+
+### From RoomCycle Patterns
+1. Adapt domain entities from spaces to mental states
+2. Transform organizing sessions to wellness sessions
+3. Convert room assessments to mood assessments
+4. Migrate household collaboration to support networks
+
+### From Native App
+1. Export/import data formats
+2. Progressive feature parity
+3. Dual-app transition period
+4. Data migration tools
+
+### To Future Technologies
+- Design for Web Component portability
+- API-first architecture
+- Standard data formats (FHIR for health data)
+- Progressive enhancement strategy
+
+## Success Metrics
+
+### Technical Metrics
+- Time to first crisis resource: <100ms
+- Offline availability: 100%
+- Sync success rate: >95%
+- Storage efficiency: <100MB total
+- Battery impact: <2% per day
+
+### User Outcome Metrics
+- Crisis resource access time
+- Mood tracking consistency
+- Intervention completion rates
+- User retention (privacy-preserving)
+- Clinical outcome improvements
+
+---
+
+## Next Steps
+1. Implement core service worker architecture
+2. Build IndexedDB schema and migrations
+3. Create crisis resource caching system
+4. Develop offline mood tracking UI
+5. Implement encryption layer
+6. Build sync protocol with CRDT
+7. Create intervention delivery system

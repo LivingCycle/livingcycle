@@ -1,0 +1,31 @@
+name = "livingcycle"
+main = "workers/worker.js"
+compatibility_date = "2024-01-14"
+workers_dev = true
+
+# Serve the built SPA
+[site]
+bucket = "./dist"
+
+# KV Namespaces for data storage
+[[kv_namespaces]]
+binding = "SCRIPTS_KV"
+id = "livingcycle_scripts"
+preview_id = "livingcycle_scripts_preview"
+
+[[kv_namespaces]]
+binding = "HELPLINES_KV"
+id = "livingcycle_helplines"
+preview_id = "livingcycle_helplines_preview"
+
+# Staging environment
+[env.staging]
+name = "livingcycle-staging"
+workers_dev = true
+
+# Production environment
+[env.production]
+name = "livingcycle-prod"
+workers_dev = false
+# route = "livingcycle.app/*"
+# zone_id = "your-zone-id"

@@ -1,0 +1,322 @@
+# LivingCycle Development Plan
+Last Updated: 2025-08-14
+
+## Project Positioning Pivot
+**LivingCycle: Daily Life Organization Assistant**
+- Open source project
+- Nonprofit partnership model
+- No medical or clinical claims
+- Focus on life organization and resource connection
+
+## User Research - Direct Feedback
+
+### User Statement (2025-08-14)
+> "The app could have national service help line numbers, alerts and alarms throughout the day that remind people of what they need to do, basically just to give them some structure of something telling you what to do.
+> 
+> See, it's stuff like that helps people like I am. A script takes away the anxiety in a logical minds because I can just read it out loud so its not my thinking, which i would fumble and ultimately hang up. But I'm going to use that exact script and see what they could say.
+> 
+> Checklists, scripts, and helpful phone numbers - I'll make sure to add stuff like that in the app, that's a good idea waiting to happen
+> 
+> But yeah, what you listed so far are all good ideas. Numbers, contact info for anyone who needs them, especially scripts. I wouldn't have gotten that far in the conversation without yours."
+
+### Key Insights from User
+1. **Structure reduces anxiety** - External reminders provide framework for daily life
+2. **Scripts eliminate decision paralysis** - Pre-written text removes cognitive load during crisis
+3. **Phone anxiety barrier** - Many struggle with making important calls without preparation
+4. **External validation** - "Not my thinking" reduces self-doubt and anxiety
+5. **Concrete tools over abstract advice** - Practical, actionable items most helpful
+
+## User Journey Map
+
+### Journey: Crisis Contact Support
+```
+Trigger → Recognition → Preparation → Action → Follow-through
+```
+
+1. **Trigger Phase**
+   - User experiences crisis or low mood
+   - Feels need to reach out but anxious about calling
+   - State: Overwhelmed, anxious, indecisive
+
+2. **Recognition Phase**
+   - Opens app seeking support
+   - Sees crisis resources readily available
+   - State: Seeking help, still anxious
+
+3. **Preparation Phase**
+   - Finds appropriate helpline number
+   - Reviews call script for their situation
+   - Practices what to say
+   - State: Building confidence, reducing anxiety
+
+4. **Action Phase**
+   - Makes the call using script
+   - Follows conversation prompts
+   - Gets help needed
+   - State: Engaged, supported
+
+5. **Follow-through Phase**
+   - Logs call outcome
+   - Sets follow-up reminders
+   - Reviews next steps checklist
+   - State: Relieved, has direction
+
+## User Stories
+
+### Epic: Structured Daily Support
+As a person needing life organization, I need external structure and reminders so that I can maintain daily functioning when motivation is low.
+
+#### Story 1: Daily Reminders
+**As a** person struggling with routine
+**I want** customizable alerts throughout the day
+**So that** I have external prompts for essential tasks
+**Acceptance Criteria:**
+- Set multiple daily reminders
+- Customize reminder messages
+- Gentle, non-judgmental tone
+- Snooze/reschedule options
+- Mark as complete for dopamine reward
+
+#### Story 2: Crisis Contact Scripts
+**As a** person with phone anxiety
+**I want** pre-written scripts for different situations
+**So that** I can make important calls without freezing up
+**Acceptance Criteria:**
+- Multiple script templates (crisis, medical, work)
+- Fill-in-the-blank personalization
+- What to expect responses
+- Practice mode
+- Copy to clipboard function
+
+#### Story 3: Emergency Resources
+**As a** person in crisis
+**I want** immediate access to help numbers
+**So that** I can get support without searching
+**Acceptance Criteria:**
+- One-tap crisis hotline access
+- Location-based local resources
+- International helpline database
+- Text/chat options listed
+- Works fully offline
+
+#### Story 4: Task Checklists
+**As a** person with executive dysfunction
+**I want** pre-made checklists for common tasks
+**So that** I can complete activities step-by-step
+**Acceptance Criteria:**
+- Daily routine checklists
+- Self-care checklists
+- Crisis management checklists
+- Customizable items
+- Progress tracking
+
+#### Story 5: Conversation Guides
+**As a** person who struggles with communication
+**I want** templates for difficult conversations
+**So that** I can express my needs clearly
+**Acceptance Criteria:**
+- Templates for family, work, medical
+- Emotional state descriptions
+- Boundary-setting scripts
+- Request for help templates
+- Practice/roleplay mode
+
+## Use Cases
+
+### UC-001: Making a 211 Call with Script Support
+**Actor:** User needing community resources (housing, food, healthcare, employment)
+**Precondition:** User needs help but unsure how to ask for services
+**Flow:**
+1. User opens app seeking resources
+2. Taps "Community Help (211)"
+3. Sees 211 prominently with "Get Help Finding Services"
+4. Taps "Call Script" button
+5. Reviews script: "Hi, I'm calling 211 for help. I need assistance with [housing/food/healthcare/utilities/job search services/vocational rehabilitation]. I'm located in [city/zip code]..."
+6. Sees checklist of info to have ready:
+   - Current zip code
+   - Type of help needed
+   - Household size
+   - Any urgent timeline
+   - For job services: Current employment status, skills/experience area
+   - For vocational rehab: Any disabilities or barriers to employment
+7. Optional: Practices opening statement
+8. Taps 211 to call
+9. Reads script to operator
+10. Follows prompts for specific services
+11. For job search: Gets connected to workforce development centers, job training programs, resume help
+12. For vocational rehabilitation: Gets referral to state VR services, disability employment programs, skills assessment
+**Postcondition:** User connected to appropriate community resources including employment and vocational rehabilitation services
+
+### UC-006: Making a Crisis Call
+**Actor:** User in emotional distress
+**Precondition:** User has phone anxiety but needs immediate support
+**Flow:**
+1. User opens app in distress
+2. Taps "Crisis Support" (always visible)
+3. Sees local crisis hotline prominently
+4. Taps "Call Script" button
+5. Reviews script: "Hi, I'm calling because I'm having a really hard time right now and need someone to talk to..."
+6. Optional: Practices reading aloud
+7. Taps number to call
+8. Reads script during call
+9. Follows conversation naturally after opening
+**Postcondition:** User successfully connected with support
+
+### UC-007: Script Practice Mode
+**Actor:** User preparing to make important call
+**Precondition:** User wants to practice script before making actual call
+**Flow:**
+1. User selects any call script (211, 988, vocational rehab, etc.)
+2. Taps "Practice Out Loud" button
+3. System uses text-to-speech to read script aloud
+4. User listens to natural pacing and pronunciation
+5. User can repeat along with the audio
+6. Optional: User records themselves practicing
+7. User can stop/restart practice at any time
+8. User gains confidence hearing script spoken naturally
+9. When ready, user proceeds to make actual call
+**Postcondition:** User has rehearsed script and feels more confident about making call
+**Technical Notes:** 
+- Implement using Web Speech API (speechSynthesis)
+- Adjustable speech rate for user comfort
+- Consider adding pause points for natural conversation flow
+- Future enhancement: voice recording for self-review
+
+### UC-002: Setting Up Daily Structure
+**Actor:** User during stable period
+**Precondition:** User wants to establish routine for difficult days
+**Flow:**
+1. User accesses "Daily Structure" settings
+2. Selects from template schedules or creates custom
+3. Sets reminder times for:
+   - Morning routine (8am: "Time to get up, you can do this")
+   - Medication (9am, 9pm: "Medication time")
+   - Meals (12pm, 6pm: "Time to eat something")
+   - Self-care (3pm: "Take a short walk or stretch")
+   - Evening wind-down (10pm: "Begin bedtime routine")
+4. Customizes message tone (gentle, encouraging, matter-of-fact)
+5. Enables notifications
+**Postcondition:** User has external structure system active
+
+### UC-003: Preparing for Doctor Appointment
+**Actor:** User with upcoming medical appointment
+**Precondition:** User anxious about explaining concerns
+**Flow:**
+1. User selects "Medical Scripts"
+2. Chooses "Health Concerns Discussion"
+3. Fills in template with specific concerns
+4. Reviews generated script
+5. Practices key phrases
+6. Saves to phone for appointment
+7. Optional: Sets reminder for appointment
+**Postcondition:** User prepared with clear communication plan
+
+### UC-004: Work Absence Communication
+**Actor:** User unable to work due to health issues
+**Precondition:** User needs to contact employer but overwhelmed
+**Flow:**
+1. User selects "Work Scripts"
+2. Chooses "Sick Day" template
+3. Customizes with relevant details
+4. Reviews professional, appropriate message
+5. Copies text to email/message app
+6. Sends to supervisor
+7. Sets reminder for follow-up if needed
+**Postcondition:** User successfully communicated with employer
+
+### UC-005: Building Safety Plan
+**Actor:** User creating crisis prevention plan
+**Precondition:** User in stable state, preparing for future
+**Flow:**
+1. User accesses "Safety Planning"
+2. Completes guided checklist:
+   - Warning signs to watch for
+   - Coping strategies that work
+   - People to contact (with numbers)
+   - Places that feel safe
+   - Reasons to keep going
+3. Adds personal crisis script
+4. Tests all contact numbers
+5. Downloads offline copy
+**Postcondition:** User has comprehensive safety plan
+
+## Technical Requirements Derived
+
+### Critical Features (Must Have)
+1. **Offline-First Scripts Database**
+   - All scripts cached locally
+   - No network required for access
+   - Instant availability in crisis
+
+2. **One-Tap Crisis Access**
+   - Crisis button always visible
+   - Bypasses all menus
+   - Works even if app crashes
+
+3. **Gentle Notification System**
+   - Non-alarming sounds
+   - Encouraging messages
+   - Respect "Do Not Disturb"
+   - Persistent but not aggressive
+
+4. **Script Customization Engine**
+   - Template variables
+   - Personal phrase library
+   - Situation-specific versions
+   - Version history
+
+5. **International Helpline Database**
+   - Geolocation-based defaults
+   - Manual country selection
+   - Multiple helpline types
+   - Regular updates
+
+### Privacy Considerations
+- Scripts stored encrypted
+- No analytics on crisis features
+- Local-only by default
+- Optional anonymous sync
+- No third-party sharing
+
+## Implementation Priority
+
+### Phase 1: Crisis Support (Week 1-2)
+- [ ] Crisis hotline database
+- [ ] Basic call scripts
+- [ ] Offline storage
+- [ ] One-tap access
+
+### Phase 2: Daily Structure (Week 3-4)
+- [ ] Reminder system
+- [ ] Basic checklists
+- [ ] Customizable messages
+- [ ] Notification preferences
+
+### Phase 3: Communication Tools (Week 5-6)
+- [ ] Extended script library
+- [ ] Template customization
+- [ ] Practice mode
+- [ ] Save/export functions
+
+### Phase 4: Safety Planning (Week 7-8)
+- [ ] Safety plan wizard
+- [ ] Contact management
+- [ ] Resource library
+- [ ] Offline backup
+
+## Success Metrics
+- Time to access crisis resources: <3 seconds
+- Script usage completion rate
+- Daily reminder engagement
+- User-reported anxiety reduction
+- Successful call completion rate
+- Return user rate during crisis
+
+## Next Actions
+1. Design script template system
+2. Research international helpline APIs
+3. Create notification sound options
+4. Design practice mode interface
+5. Plan offline storage architecture
+6. Write initial script library
+7. Design checklist components

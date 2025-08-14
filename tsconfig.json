@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    
+    "noEmit": true,
+    "types": ["vite/client", "vite-plugin-pwa/client", "@cloudflare/workers-types"],
+    
+    "paths": {
+      "~/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*", "workers/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
